@@ -48,7 +48,7 @@ def our_dense_layer(x, n_in, n_out):
     '''TODO: define the operation for z (hint: use tf.matmul)'''
     z = tf.matmul(x, W) + b
 
-    '''TODO: define the operation for out (hint: use tf.sigmoid)'''
+    '''TODO: define the operation forr out (hint: use tf.sigmoid)'''
     out = tf.sigmoid(z)
     return out
 
