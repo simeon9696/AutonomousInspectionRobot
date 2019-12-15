@@ -2,7 +2,7 @@
     "python.linting.pylintEnabled": false,
     "python.linting.pycodestyleEnabled": true,
     "python.linting.enabled": true,
-    "editor.fontFamily": "Roboto ,Consolas, 'Courier New'",
+    "editor.fontFamily": "'Fira Code' ,Consolas, 'Courier New'",
     "python.linting.pycodestyleArgs": [
         "--ignore=E501" 
     ]
