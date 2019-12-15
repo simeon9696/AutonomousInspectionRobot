@@ -1,0 +1,9 @@
+{
+    "python.linting.pylintEnabled": false,
+    "python.linting.pycodestyleEnabled": true,
+    "python.linting.enabled": true,
+    "editor.fontFamily": "Roboto ,Consolas, 'Courier New'",
+    "python.linting.pycodestyleArgs": [
+        "--ignore=E501" 
+    ]
+}
