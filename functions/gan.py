@@ -92,8 +92,16 @@ class Discriminator(nn.Module):
 
 def save_image(tensor, fp, nrow=8, padding=2,
                normalize=False, range=None, scale_each=False, pad_value=0, format=None):
-    # Save a given Tensor into an image file.
-   
+    """Save a given Tensor into an image file.
+
+    Args:
+        tensor (Tensor or list): Image to be saved. If given a mini-batch tensor,
+            saves the tensor as a grid of images by calling ``make_grid``.
+        fp - A filename(string) or file object
+        format(Optional):  If omitted, the format to use is determined from the filename extension.
+            If a file object was used instead of a filename, this parameter should always be used.
+        **kwargs: Other arguments are documented in ``make_grid``.
+    """
     from PIL import Image
     grid = vutils.make_grid(tensor, nrow=nrow, padding=padding, pad_value=pad_value,
                      normalize=normalize, range=range, scale_each=scale_each)
@@ -110,11 +118,15 @@ print("Random Seed: ", manualSeed)
 random.seed(manualSeed)
 torch.manual_seed(manualSeed)
 
+# Directory to store generated images
+generated = 'generated/'
 
-# Root directory for dataset
+# Root directory for dataset 
+# The end folder has to have a folder inside it called images
+
 dataroot = "data/Cubism"
 
-# Number of workers for dataloader. This may be switched to 0 if problems occur
+# Number of workers for dataloader
 workers = 2
 
 # Batch size during training
@@ -137,7 +149,7 @@ ngf = 64
 ndf = 64
 
 # Number of training epochs
-num_epochs = 10
+num_epochs = 500
 
 # Learning rate for optimizers
 lr = 0.0002
@@ -166,11 +178,11 @@ dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size,
 device = torch.device("cuda:0" if (torch.cuda.is_available() and ngpu > 0) else "cpu")
 
 # Plot some training images
-real_batch = next(iter(dataloader))
-plt.figure(figsize=(8,8))
-plt.axis("off")
-plt.title("Training Images")
-plt.imshow(np.transpose(vutils.make_grid(real_batch[0].to(device)[:64], padding=2, normalize=True).cpu(),(1,2,0)))
+# real_batch = next(iter(dataloader))
+# plt.figure(figsize=(8,8))
+# plt.axis("off")
+# plt.title("Training Images")
+# plt.imshow(np.transpose(vutils.make_grid(real_batch[0].to(device)[:64], padding=2, normalize=True).cpu(),(1,2,0)))
 
 
 
@@ -230,7 +242,10 @@ G_losses = []
 D_losses = []
 iters = 0
 
-print("[INFO] Starting Training Loop...")
+#Create generated dir
+os.mkdir(generated)
+
+print("Starting Training Loop...")
 # For each epoch
 for epoch in range(num_epochs):
     # For each batch in the dataloader
@@ -244,7 +259,7 @@ for epoch in range(num_epochs):
         # Format batch
         real_cpu = data[0].to(device)
         b_size = real_cpu.size(0)
-        label = torch.full((b_size,), real_label, device=device)
+        label = torch.full((b_size,), real_label, dtype=torch.float, device=device)
         # Forward pass real batch through D
         output = netD(real_cpu).view(-1)
         # Calculate loss on all-real batch
@@ -286,15 +301,6 @@ for epoch in range(num_epochs):
         # Update G
         optimizerG.step()
 
-        # Output training stats
-        if i % 50 == 0:
-            print('[%d/%d][%d/%d]\tLoss_D: %.4f\tLoss_G: %.4f\tD(x): %.4f\tD(G(z)): %.4f / %.4f'
-                  % (epoch, num_epochs, i, len(dataloader),
-                     errD.item(), errG.item(), D_x, D_G_z1, D_G_z2))
-            filename = "generated/gen-"+str(epoch)+".jpg"
-            img = np.transpose(img_list[-1],(1,2,0))
-            save_image(img,filename)
-
         # Save Losses for plotting later
         G_losses.append(errG.item())
         D_losses.append(errD.item())
@@ -307,4 +313,34 @@ for epoch in range(num_epochs):
 
         iters += 1
 
-print("[SUCCESS] Generation Complete!")
+        # Output training stats
+        if i % 50 == 0:
+            print('[%d/%d][%d/%d]\tLoss_D: %.4f\tLoss_G: %.4f\tD(x): %.4f\tD(G(z)): %.4f / %.4f'
+                  % (epoch, num_epochs, i, len(dataloader),
+                     errD.item(), errG.item(), D_x, D_G_z1, D_G_z2))
+            filename = "generated/epoch-"+str(epoch)+".jpg"
+            img = img_list[-1]
+            save_image(img,filename)
+
+print("Generation Complete! after")
+print(iters)
+print("iterations")
+
+
+plt.figure(figsize=(10,5))
+plt.title("Generator and Discriminator Loss During Training")
+plt.plot(G_losses,label="G")
+plt.plot(D_losses,label="D")
+plt.xlabel("iterations")
+plt.ylabel("Loss")
+plt.legend()
+plt.show()
+
+
+#%%capture
+fig = plt.figure(figsize=(8,8))
+plt.axis("off")
+ims = [[plt.imshow(np.transpose(i,(1,2,0)), animated=True)] for i in img_list]
+ani = animation.ArtistAnimation(fig, ims, interval=1000, repeat_delay=1000, blit=True)
+
+HTML(ani.to_jshtml())
