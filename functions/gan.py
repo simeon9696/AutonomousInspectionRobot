@@ -158,7 +158,7 @@ lr = 0.0002
 beta1 = 0.5
 
 # Number of GPUs available. Use 0 for CPU mode.
-ngpu = 4
+ngpu = 1
 
 
 # We can use an image folder dataset the way we have it setup.
